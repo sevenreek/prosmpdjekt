@@ -1,6 +1,8 @@
 import numpy as np
 import pandas as pd
 import os
+import matplotlib.pyplot as plt
+from scipy.sparse import data
 from sklearn.feature_selection import SelectKBest, mutual_info_classif, f_classif
 from sklearn.neighbors import KNeighborsClassifier, NearestCentroid
 from sklearn.metrics import classification_report, confusion_matrix
@@ -66,6 +68,8 @@ class Dataset():
         self.train.columns = COLUMN_NAMES
         self.test.columns = COLUMN_NAMES
 
+        self.remove_weird_samples()
+
         if(normalize): 
             self.normalize()
 
@@ -81,6 +85,9 @@ class Dataset():
         self.compute_means()
         # policz ich macierze kowariancji
         self.compute_covariance_matrices()
+
+    def remove_weird_samples(self):
+        self.train = self.train[self.train['Peak number'] < 10] # jedna próbka ma wartość >40 wiec prawdopodobnie jest błędna
 
     def normalize(self): # nie normalizuje self.combined
         maxes = self.combined.max(axis=0)
@@ -174,6 +181,15 @@ class Dataset():
         return (self.test.iloc[:,-1], predictions)
 
     def maha_nm(self, test):
+        """Dokonuje predykcji klasy próbek ze zbioru test przy użyciu odległośći mahalanobisa 
+        od centroidów kolejnych klas w self.means
+
+        Args:
+            test ([type]): Dataframe z obserwacjami
+
+        Returns:
+            [type]: numpy array z przypisaniem klas do obserwacji z test
+        """
         predictions = np.empty((test.shape[0],), dtype=object)
 
         for i in range(test.shape[0]): # dla kazdej probki z testowego
@@ -188,11 +204,57 @@ class Dataset():
             predictions[i] = class_assign
 
         return predictions
+
+def plot_2d(dataset:Dataset):
+    """Tworzy dwuwymiarowy wykres zachowanych klas ze zbioru treningowego wykorzystując
+    dwie pierwsze cechy ze zbioru self.preserverd_attributes jako x i y.
+
+    Args:
+        dataset (Dataset): Zbiór danych zawarty w klasie pomoczniczej
+    """
+    #plt.figure()
+    ax = None
+    for c in dataset.classed:
+        if(ax is None):
+            ax = dataset.classed[c].plot.scatter(x=0, y=1, label=c, c=np.random.rand(3,))
+        else:
+            dataset.classed[c].plot.scatter(x=0, y=1, ax=ax, label=c, c=np.random.rand(3,))
+    plt.show()
 # Do testowania algorytmów zbiory są podzielone na testowy i treningowy za pomocą tego współczynnika; 
-# testowy bedzie zawierał PARAM_SPLIT_TEST próbek oryginalego zbioru testowego;
+# testowy bedzie zawierał 1-(PARAM_SPLIT_TEST/1) części próbek oryginalego zbioru testowego;
 # PARAM_SPLIT_TEST może także przyjąć wartość None sugerując użycie oryginalnego podziału na test i train;
 PARAM_SPLIT_TEST = None # None 
+ds = Dataset(
+    TRAIN_FILE_PATH, 
+    TEST_FILE_PATH, 
+    limit_to_classes = ["D", "G"], 
+    limit_to_attributes = 2,
+    train_test_split_ratio=PARAM_SPLIT_TEST, 
+    normalize=False
+)
+plot_2d(ds)
 
+ds = Dataset(
+    TRAIN_FILE_PATH, 
+    TEST_FILE_PATH, 
+    limit_to_classes = ["A", "C"], 
+    limit_to_attributes = 2,
+    train_test_split_ratio=PARAM_SPLIT_TEST, 
+    normalize=False
+)
+plot_2d(ds)
+
+ds = Dataset(
+    TRAIN_FILE_PATH, 
+    TEST_FILE_PATH, 
+    limit_to_classes = CLASS_NAMES, # WSZYSTKIE KLASY
+    limit_to_attributes = 2,
+    train_test_split_ratio=PARAM_SPLIT_TEST, 
+    normalize=False
+)
+plot_2d(ds)
+
+PARAM_SPLIT_TEST = None # None 
 ds = Dataset(
     TRAIN_FILE_PATH, 
     TEST_FILE_PATH, 
@@ -223,4 +285,17 @@ print(classification_report(true, pred))
 
 true, pred = ds.predict_test_samples(method="knn", k=9)
 print("-------------- 9-NN ---------------")
+print(classification_report(true, pred))
+
+
+ds = Dataset(
+    TRAIN_FILE_PATH, 
+    TEST_FILE_PATH, 
+    limit_to_classes = [x for x in CLASS_NAMES if x != 'B'], # WSZYSTKIE KLASY POZA B -> TWORZY MACIERZ OSOBLIWĄ
+    limit_to_attributes = ATTRIBUTE_NAMES,
+    train_test_split_ratio=PARAM_SPLIT_TEST, 
+    normalize=False
+)
+true, pred = ds.predict_test_samples(method="knn", k=5)
+print("-------------- 5-NN WSZYSTKO ---------------")
 print(classification_report(true, pred))
