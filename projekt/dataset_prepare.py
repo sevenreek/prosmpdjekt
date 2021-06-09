@@ -1,7 +1,9 @@
 import numpy as np
+from numpy.random import rand, randint
 import pandas as pd
 import os
 import matplotlib.pyplot as plt
+from sklearn.metrics import ConfusionMatrixDisplay
 from scipy.sparse import data
 from sklearn.feature_selection import SelectKBest, mutual_info_classif, f_classif
 from sklearn.neighbors import KNeighborsClassifier, NearestCentroid
@@ -224,6 +226,48 @@ def plot_2d(dataset:Dataset):
 # testowy bedzie zawierał 1-(PARAM_SPLIT_TEST/1) części próbek oryginalego zbioru testowego;
 # PARAM_SPLIT_TEST może także przyjąć wartość None sugerując użycie oryginalnego podziału na test i train;
 PARAM_SPLIT_TEST = None # None 
+
+
+"""
+ds = Dataset(
+    TRAIN_FILE_PATH, 
+    TEST_FILE_PATH, 
+    limit_to_classes = [x for x in CLASS_NAMES if x != 'B'], # WSZYSTKIE KLASY
+    limit_to_attributes = [ATTRIBUTE_NAMES[randint(0,len(ATTRIBUTE_NAMES))], ATTRIBUTE_NAMES[randint(0,len(ATTRIBUTE_NAMES))]],
+    train_test_split_ratio=PARAM_SPLIT_TEST, 
+    normalize=False
+)
+plot_2d(ds)
+ds = Dataset(
+    TRAIN_FILE_PATH, 
+    TEST_FILE_PATH, 
+    limit_to_classes = [x for x in CLASS_NAMES if x != 'B'], # WSZYSTKIE KLASY
+    limit_to_attributes = [ATTRIBUTE_NAMES[randint(0,len(ATTRIBUTE_NAMES))], ATTRIBUTE_NAMES[randint(0,len(ATTRIBUTE_NAMES))]],
+    train_test_split_ratio=PARAM_SPLIT_TEST, 
+    normalize=False
+)
+plot_2d(ds)
+ds = Dataset(
+    TRAIN_FILE_PATH, 
+    TEST_FILE_PATH, 
+    limit_to_classes = [x for x in CLASS_NAMES if x != 'B'], # WSZYSTKIE KLASY
+    limit_to_attributes = [ATTRIBUTE_NAMES[randint(0,len(ATTRIBUTE_NAMES))], ATTRIBUTE_NAMES[randint(0,len(ATTRIBUTE_NAMES))]],
+    train_test_split_ratio=PARAM_SPLIT_TEST, 
+    normalize=False
+)
+plot_2d(ds)
+ds = Dataset(
+    TRAIN_FILE_PATH, 
+    TEST_FILE_PATH, 
+    limit_to_classes = [x for x in CLASS_NAMES if x != 'B'], # WSZYSTKIE KLASY
+    limit_to_attributes = [ATTRIBUTE_NAMES[randint(0,len(ATTRIBUTE_NAMES))], ATTRIBUTE_NAMES[randint(0,len(ATTRIBUTE_NAMES))]],
+    train_test_split_ratio=PARAM_SPLIT_TEST, 
+    normalize=False
+)
+plot_2d(ds)
+
+
+
 ds = Dataset(
     TRAIN_FILE_PATH, 
     TEST_FILE_PATH, 
@@ -244,15 +288,7 @@ ds = Dataset(
 )
 plot_2d(ds)
 
-ds = Dataset(
-    TRAIN_FILE_PATH, 
-    TEST_FILE_PATH, 
-    limit_to_classes = CLASS_NAMES, # WSZYSTKIE KLASY
-    limit_to_attributes = 2,
-    train_test_split_ratio=PARAM_SPLIT_TEST, 
-    normalize=False
-)
-plot_2d(ds)
+
 
 PARAM_SPLIT_TEST = None # None 
 ds = Dataset(
@@ -287,7 +323,6 @@ true, pred = ds.predict_test_samples(method="knn", k=9)
 print("-------------- 9-NN ---------------")
 print(classification_report(true, pred))
 
-
 ds = Dataset(
     TRAIN_FILE_PATH, 
     TEST_FILE_PATH, 
@@ -299,3 +334,49 @@ ds = Dataset(
 true, pred = ds.predict_test_samples(method="knn", k=5)
 print("-------------- 5-NN WSZYSTKO ---------------")
 print(classification_report(true, pred))
+
+
+"""
+ds = Dataset(
+    TRAIN_FILE_PATH, 
+    TEST_FILE_PATH, 
+    limit_to_classes = [x for x in CLASS_NAMES if x != 'B'], # WSZYSTKIE KLASY POZA B -> TWORZY MACIERZ OSOBLIWĄ
+    limit_to_attributes = 10,
+    train_test_split_ratio=PARAM_SPLIT_TEST, 
+    normalize=False
+)
+
+true, pred = ds.predict_test_samples(method="knn", k=5)
+print("-------------- 1-NN WSZYSTKO ---------------")
+print(classification_report(true, pred))
+
+true, pred = ds.predict_test_samples(method="knn", k=5)
+print("-------------- 5-NN WSZYSTKO ---------------")
+print(classification_report(true, pred))
+# plot confusion matrix
+fig, ax = plt.subplots()
+fig.suptitle("5NN")
+disp = ConfusionMatrixDisplay(confusion_matrix=confusion_matrix(true, pred, labels=ds.preserved_classes), display_labels=ds.preserved_classes)
+disp.plot(ax=fig.gca(), xticks_rotation=0)
+plt.show()
+
+print()
+
+
+true, pred = ds.predict_test_samples(method="knn", k=10)
+print("-------------- 10-NN WSZYSTKO ---------------")
+print(classification_report(true, pred))
+
+true, pred = ds.predict_test_samples(method="nm",)
+print("-------------- NM WSZYSTKO ---------------")
+print(classification_report(true, pred))
+
+true, pred = ds.predict_test_samples(method="mah-nm")
+print("-------------- NM-Mah WSZYSTKO ---------------")
+print(classification_report(true, pred))
+print(confusion_matrix(true, pred, labels=ds.preserved_classes))
+fig, ax = plt.subplots()
+fig.suptitle("NM-Mah")
+disp = ConfusionMatrixDisplay(confusion_matrix=confusion_matrix(true, pred, labels=ds.preserved_classes), display_labels=ds.preserved_classes)
+disp.plot(ax=fig.gca(), xticks_rotation=0)
+plt.show()
